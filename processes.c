@@ -17,6 +17,12 @@
         - LOW_PRIORITY_CLASSES)
 #define LOW_PRIORITY_CLASSES 2
 
+/* These constants indicate the chance (of 100) that a process of a given
+ * priority class will terminate after being given CPU time. */
+#define HIGH_PRIORITY_TERM 5
+#define MEDIUM_PRIORITY_TERM 1
+#define LOW_PRIORITY_TERM 1
+
 /* Indicates how many processes should be generated to populate the priority
  * queue. */
 #define PROCESS_COUNT 1000
@@ -26,6 +32,13 @@
  * @return The generated process.
  */
 PCB *generateProcess(void);
+
+/**
+ * Pseudo-randomly indicates whether a process should terminate.
+ * @param pcb The process that may be terminated.
+ * @return Returns 1 if the process should terminate, otherwise 0.
+ */
+int terminate(PCB *pcb);
 
 
 int main(int argc, char *argv[]) {
@@ -63,4 +76,20 @@ PCB *generateProcess(void) {
     }
     
     return pcb;
+}
+
+int terminate(PCB *pcb) {
+    /* Generate a value that will be used to determine if the process should
+     * terminate. */
+    int terminateValue = rand() % 100;
+
+    /* Depending on the process's priority class, determine whether it should
+     * terminate. */
+    if (pcb->priority < HIGH_PRIORITY_CLASSES) {
+        return terminateValue < HIGH_PRIORITY_TERM;
+    } else if (pcb->priority < HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES) {
+        return terminateValue < MEDIUM_PRIORITY_TERM;
+    } else {
+        return terminateValue < LOW_PRIORITY_TERM;
+    }
 }
