@@ -40,6 +40,8 @@ typedef struct priority_queue {
 
 PCB *PriorityQueue_dequeue(PriorityQueue *queue);
 
+PCB *PriorityQueue_dequeueFrom(PriorityQueue *queue, int priority);
+
 void PriorityQueue_enqueue(PriorityQueue *queue, PCB *pcb);
 
 PCB *PriorityQueue_peekProcess(PriorityQueue *queue, int processID);

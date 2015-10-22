@@ -11,18 +11,26 @@
 PCB *PriorityQueue_dequeue(PriorityQueue *queue) {
     int i = 0;
 	while (i < PRIORITY_CLASSES) {
-		while (queue->queues[i].head != NULL) {
-            PCB *pcb = queue->queues[i].head;
-			queue->queues[i].head = queue->queues[i].head->next;
-            if (queue->queues[i].head == NULL) {
-                queue->queues[i].tail = NULL;
-            }
-			--queue->processes;
-			return pcb;
+		PCB *pcb = PriorityQueue_dequeueFrom(queue, i);
+		if (pcb != NULL) {
+		    return pcb;
 		}
 		++i;
 	}
 	return NULL;
+}
+
+PCB *PriorityQueue_dequeueFrom(PriorityQueue *queue, int priority) {
+    if (queue->queues[priority].head != NULL) {
+        PCB *pcb = queue->queues[priority].head;
+        queue->queues[priority].head = queue->queues[priority].head->next;
+        if (queue->queues[priority].head == NULL) {
+            queue->queues[priority].tail = NULL;
+        }
+        --queue->processes;
+        return pcb;
+    }
+    return NULL;
 }
 
 void PriorityQueue_enqueue(PriorityQueue *queue, PCB *pcb) {

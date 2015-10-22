@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "readyQueue.h"
 
 /* These constants define the percent of randomly generated processes that will
@@ -29,9 +30,18 @@
 #define MEDIUM_PRIORITY_TERM 1
 #define LOW_PRIORITY_TERM 1
 
+/* 
+ * */
+#define HIGH_PRIORITY_SCALE 4
+#define MEDIUM_PRIORITY_SCALE 2
+#define LOW_PRIORITY_SCALE 1
+
 /* Indicates how many processes should be generated to populate the priority
  * queue. */
 #define PROCESS_COUNT 100
+
+// The amount of time (microseconds) given to a process when it is scheduled.
+#define QUANTUM 1
 
 /**
  * Generates a process with a pseudo-random priority.
@@ -45,6 +55,8 @@ PCB *generateProcess(void);
  * @return Returns 1 if the process should terminate, otherwise 0.
  */
 int terminate(PCB *pcb);
+
+void dispatch(int scale);
 
 
 int main(int argc, char *argv[]) {
@@ -64,10 +76,29 @@ int main(int argc, char *argv[]) {
     }
     
     // Schedule processes until none exist.
+    int class = 0;
     while (queue.processes > 0) {
-        pcb = PriorityQueue_dequeue(&queue);
+        if (class >= PRIORITY_CLASSES) {
+            class = 0;
+        }
+        pcb = PriorityQueue_dequeueFrom(&queue, class);
+        if (pcb == NULL) {
+            ++class;
+            continue;
+        }
         printf("Dequeuing: Process(PID=%d, Priority=%d)\n", pcb->processID,
                 pcb->priority);
+        
+        /* Give the process a variable amount of time depending on its priority
+         * class */
+        if (pcb->priority < HIGH_PRIORITY_CLASSES) {
+            dispatch(HIGH_PRIORITY_SCALE);
+        } else if (pcb->priority < HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES) {
+            dispatch(MEDIUM_PRIORITY_SCALE);
+        } else {
+            dispatch(LOW_PRIORITY_SCALE);
+        }
+        
         if (terminate(pcb)) {
             printf("Terminating: Process(PID=%d, Priority=%d)\n",
                 pcb->processID, pcb->priority);
@@ -77,6 +108,8 @@ int main(int argc, char *argv[]) {
                 pcb->processID, pcb->priority);
             PriorityQueue_enqueue(&queue, pcb);
         }
+        
+        ++class;
     }
     
     return 0;
@@ -117,4 +150,8 @@ int terminate(PCB *pcb) {
     } else {
         return terminateValue < LOW_PRIORITY_TERM;
     }
+}
+
+void dispatch(int scale) {
+    usleep(scale * QUANTUM);
 }
