@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 }
 
 PCB *generateProcess(void) {
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    PCB *pcb = (PCB *) malloc(sizeof(PCB));
     
     // Determine which priority class the process will belong to.
     int class = rand() % 100;

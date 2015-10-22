@@ -33,6 +33,7 @@ typedef struct fifo_queue {
 } FIFOQueue;
 
 typedef struct priority_queue {
+    int processes;
     FIFOQueue queues[PRIORITY_CLASSES];
 } PriorityQueue;
 

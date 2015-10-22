@@ -14,6 +14,7 @@ PCB *PriorityQueue_dequeue(PriorityQueue *queue) {
 		while (queue->queues[i].head != NULL) {
             PCB *pcb = queue->queues[i].head;
 			queue->queues[i].head = queue->queues[i].head->next;
+			--queue->processes;
 			return pcb;
 		}
 		i++;
@@ -31,6 +32,7 @@ void PriorityQueue_enqueue(PriorityQueue *queue, PCB *pcb) {
 		queue->queues[i].tail->next = pcb;
 		queue->queues[i].tail = pcb;
 	}
+	++queue->processes;
 }
 
 PCB *PriorityQueue_peekProcess(PriorityQueue *queue, int processID) {
