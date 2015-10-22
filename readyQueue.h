@@ -21,6 +21,7 @@ typedef enum {
 
 typedef struct pcb {
     struct pcb *next;
+    
     int processID;
     int priority;
     StateType state;

@@ -1,4 +1,4 @@
 CC=clang
 
-readyQueueTest: readyQueueTest.c readyQueue.c
-	$(CC) readyQueueTest.c readyQueue.c -o readyQueueTest
+processes: processes.c readyQueue.c
+	$(CC) processes.c readyQueue.c -o processes
