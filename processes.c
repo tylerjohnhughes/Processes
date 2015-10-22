@@ -66,10 +66,6 @@ int main(int argc, char *argv[]) {
     // Schedule processes until none exist.
     while (queue.processes > 0) {
         pcb = PriorityQueue_dequeue(&queue);
-        if (pcb == NULL) {
-            printf("term at NULL with %d procs", queue.processes);
-            fflush(stdout);
-        }
         printf("Dequeuing: Process(PID=%d, Priority=%d)\n", pcb->processID,
                 pcb->priority);
         if (terminate(pcb)) {
