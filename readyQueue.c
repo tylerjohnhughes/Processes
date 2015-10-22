@@ -14,10 +14,13 @@ PCB *PriorityQueue_dequeue(PriorityQueue *queue) {
 		while (queue->queues[i].head != NULL) {
             PCB *pcb = queue->queues[i].head;
 			queue->queues[i].head = queue->queues[i].head->next;
+            if (queue->queues[i].head == NULL) {
+                queue->queues[i].tail = NULL;
+            }
 			--queue->processes;
 			return pcb;
 		}
-		i++;
+		++i;
 	}
 	return NULL;
 }

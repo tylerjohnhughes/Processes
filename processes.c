@@ -1,3 +1,9 @@
+/**
+ * processes.c
+ *
+ * @author Tyler Hughes, Audrey Chavarria
+ */
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +12,8 @@
 /* These constants define the percent of randomly generated processes that will
  * be generated for each priority. Low priority takes whatever is not high or
  * medium priority. */
-#define HIGH_PRIORITY_PERCENT 10
-#define MEDIUM_PRIORITY_PERCENT 70
+#define HIGH_PRIORITY_PERCENT 5
+#define MEDIUM_PRIORITY_PERCENT 65
 
 /* These constants describe how many priority classes are devoted to each of
  * high, medium, and low priority objects. These indicate how the scheduler
@@ -25,7 +31,7 @@
 
 /* Indicates how many processes should be generated to populate the priority
  * queue. */
-#define PROCESS_COUNT 1000
+#define PROCESS_COUNT 100
 
 /**
  * Generates a process with a pseudo-random priority.
@@ -43,15 +49,38 @@ int terminate(PCB *pcb);
 
 int main(int argc, char *argv[]) {
     PriorityQueue queue = {};
+    PCB *pcb;
     
     // Seed rand before generating processes.
     srand(time(NULL));
     
     // Populate the priority queue with random processes.
-    PCB *pcb;
     for (int i = 0; i < PROCESS_COUNT; ++i) {
         pcb = generateProcess();
+        pcb->processID = i;
+        printf("Creating: Process(PID=%d, Priority=%d)\n", pcb->processID,
+                pcb->priority);
         PriorityQueue_enqueue(&queue, pcb);
+    }
+    
+    // Schedule processes until none exist.
+    while (queue.processes > 0) {
+        pcb = PriorityQueue_dequeue(&queue);
+        if (pcb == NULL) {
+            printf("term at NULL with %d procs", queue.processes);
+            fflush(stdout);
+        }
+        printf("Dequeuing: Process(PID=%d, Priority=%d)\n", pcb->processID,
+                pcb->priority);
+        if (terminate(pcb)) {
+            printf("Terminating: Process(PID=%d, Priority=%d)\n",
+                pcb->processID, pcb->priority);
+            free(pcb);
+        } else {
+            printf("Enqueuing: Process(PID=%d, Priority=%d)\n",
+                pcb->processID, pcb->priority);
+            PriorityQueue_enqueue(&queue, pcb);
+        }
     }
     
     return 0;
