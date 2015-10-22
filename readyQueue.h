@@ -7,7 +7,7 @@
 #ifndef READY_QUEUE_H
 #define READY_QUEUE_H
 
-#define PRIORITY_CLASSES 64
+#define PRIORITY_CLASSES 8
 
 
 typedef enum {
@@ -21,10 +21,10 @@ typedef enum {
 
 typedef struct pcb {
     struct pcb *next;
-    
     int processID;
     int priority;
     StateType state;
+    unsigned lastRun;
 } PCB;
 
 typedef struct fifo_queue {
