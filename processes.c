@@ -10,6 +10,12 @@
 #include <unistd.h>
 #include "readyQueue.h"
 
+typedef enum priority_class {
+    HIGH_PRIORITY,
+    MEDIUM_PRIORITY,
+    LOW_PRIORITY
+} PriorityClass;
+
 /* These constants define the percent of randomly generated processes that will
  * be generated for each priority. Low priority takes whatever is not high or
  * medium priority. */
@@ -38,10 +44,18 @@
 
 /* Indicates how many processes should be generated to populate the priority
  * queue. */
-#define PROCESS_COUNT 100
+#define PROCESS_COUNT 800
 
 // The amount of time (microseconds) given to a process when it is scheduled.
-#define QUANTUM 1
+#define QUANTUM 1250
+
+/**
+ * Dispatches @scale times the quantum value, doing nothing for that period.
+ * @param scale The multiple of quantums to wait.
+ */
+void dispatch(int scale);
+
+PriorityClass getPriorityClass(PCB *pcb);
 
 /**
  * Generates a process with a pseudo-random priority.
@@ -55,8 +69,6 @@ PCB *generateProcess(void);
  * @return Returns 1 if the process should terminate, otherwise 0.
  */
 int terminate(PCB *pcb);
-
-void dispatch(int scale);
 
 
 int main(int argc, char *argv[]) {
@@ -91,12 +103,20 @@ int main(int argc, char *argv[]) {
         
         /* Give the process a variable amount of time depending on its priority
          * class */
-        if (pcb->priority < HIGH_PRIORITY_CLASSES) {
-            dispatch(HIGH_PRIORITY_SCALE);
-        } else if (pcb->priority < HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES) {
-            dispatch(MEDIUM_PRIORITY_SCALE);
-        } else {
-            dispatch(LOW_PRIORITY_SCALE);
+        PriorityClass class = getPriorityClass(pcb);
+        switch (class) {
+            case HIGH_PRIORITY:
+                dispatch(HIGH_PRIORITY_SCALE);
+                break;
+            case MEDIUM_PRIORITY:
+                dispatch(MEDIUM_PRIORITY_SCALE);
+                break;
+            case LOW_PRIORITY:
+                dispatch(LOW_PRIORITY_SCALE);
+                break;
+            default:
+                printf("Error: Invalid priority class.\n");
+                exit(1);
         }
         
         if (terminate(pcb)) {
@@ -113,6 +133,10 @@ int main(int argc, char *argv[]) {
     }
     
     return 0;
+}
+
+void dispatch(int scale) {
+    usleep(scale * QUANTUM);
 }
 
 PCB *generateProcess(void) {
@@ -136,6 +160,16 @@ PCB *generateProcess(void) {
     return pcb;
 }
 
+PriorityClass getPriorityClass(PCB *pcb) {
+    if (pcb->priority < HIGH_PRIORITY_CLASSES) {
+        return HIGH_PRIORITY;
+    } else if (pcb->priority < HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES) {
+        return MEDIUM_PRIORITY;
+    } else {
+        return LOW_PRIORITY;
+    }
+}
+
 int terminate(PCB *pcb) {
     /* Generate a value that will be used to determine if the process should
      * terminate. */
@@ -143,15 +177,16 @@ int terminate(PCB *pcb) {
 
     /* Depending on the process's priority class, determine whether it should
      * terminate. */
-    if (pcb->priority < HIGH_PRIORITY_CLASSES) {
-        return terminateValue < HIGH_PRIORITY_TERM;
-    } else if (pcb->priority < HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES) {
-        return terminateValue < MEDIUM_PRIORITY_TERM;
-    } else {
-        return terminateValue < LOW_PRIORITY_TERM;
+    PriorityClass class = getPriorityClass(pcb);
+    switch (class) {
+        case HIGH_PRIORITY:
+            return terminateValue < HIGH_PRIORITY_TERM;
+        case MEDIUM_PRIORITY:
+            return terminateValue < MEDIUM_PRIORITY_TERM;
+        case LOW_PRIORITY:
+            return terminateValue < LOW_PRIORITY_TERM;
+        default:
+            printf("Error: Invalid priority class.\n");
+            exit(1);
     }
-}
-
-void dispatch(int scale) {
-    usleep(scale * QUANTUM);
 }
