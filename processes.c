@@ -36,15 +36,17 @@ typedef enum priority_class {
 #define MEDIUM_PRIORITY_TERM 1
 #define LOW_PRIORITY_TERM 1
 
-/* 
- * */
+/* The number of quantums given to the priority. */
 #define HIGH_PRIORITY_SCALE 4
 #define MEDIUM_PRIORITY_SCALE 2
 #define LOW_PRIORITY_SCALE 1
 
 /* Indicates how many processes should be generated to populate the priority
- * queue. */
-#define PROCESS_COUNT 800
+ * queue initially. */
+#define INIT_PROCESSES 5
+
+/* The chance (of 100) that a new process will be added during a scheduling round. */
+#define GENERATE_CHANCE 5
 
 // The amount of time (microseconds) given to a process when it is scheduled.
 #define QUANTUM 1250
@@ -55,6 +57,10 @@ typedef enum priority_class {
  */
 void dispatch(int scale);
 
+/**
+ * Calculates the priority class of a process.
+ * @return The priority class.
+ */
 PriorityClass getPriorityClass(PCB *pcb);
 
 /**
@@ -79,9 +85,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     
     // Populate the priority queue with random processes.
-    for (int i = 0; i < PROCESS_COUNT; ++i) {
+    int processID = 0;
+    for (; processID < INIT_PROCESSES; ++processID) {
         pcb = generateProcess();
-        pcb->processID = i;
+        pcb->processID = processID;
         printf("Creating: Process(PID=%d, Priority=%d)\n", pcb->processID,
                 pcb->priority);
         PriorityQueue_enqueue(&queue, pcb);
@@ -90,6 +97,16 @@ int main(int argc, char *argv[]) {
     // Schedule processes until none exist.
     int class = 0;
     while (queue.processes > 0) {
+        int addProcess = rand() % 100;
+        if (addProcess < GENERATE_CHANCE) {
+            pcb = generateProcess();
+            pcb->processID = processID;
+            ++processID;
+            printf("Creating: Process(PID=%d, Priority=%d)\n", pcb->processID,
+                pcb->priority);
+            PriorityQueue_enqueue(&queue, pcb);
+        }
+    
         if (class >= PRIORITY_CLASSES) {
             class = 0;
         }
@@ -98,8 +115,9 @@ int main(int argc, char *argv[]) {
             ++class;
             continue;
         }
-        printf("Dequeuing: Process(PID=%d, Priority=%d)\n", pcb->processID,
-                pcb->priority);
+        printf("Dequeuing: Process(PID=%d, Priority=%d, LastRun=%u)\n",
+                pcb->processID, pcb->priority, pcb->lastRun);
+        pcb->lastRun = time(NULL);
         
         /* Give the process a variable amount of time depending on its priority
          * class */
@@ -156,6 +174,7 @@ PCB *generateProcess(void) {
         pcb->priority = HIGH_PRIORITY_CLASSES + MEDIUM_PRIORITY_CLASSES +
                 (rand() % LOW_PRIORITY_CLASSES);
     }
+    pcb->lastRun = time(NULL);
     
     return pcb;
 }
